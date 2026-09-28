@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <!-- Đọc Webhook URL từ application.yml / biến môi trường DISCORD_WEBHOOK_URL -->
+    <springProperty scope="context" name="DISCORD_WEBHOOK" source="discord.webhook.url"
+                    defaultValue="https://discord.com/api/webhooks/dummy-url"/>
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name"
+                    defaultValue="storex-service"/>
+
+    <!-- Định nghĩa Console Pattern chứa %X{requestId} chuẩn theo yêu cầu Bài 2 -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%cyan(%X{requestId:-NO-REQ-ID})] [%magenta(%thread)] %logger{36} - %msg%n"/>
+
+    <!-- 1. Console Appender ghi log ra màn hình Terminal -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 2. Custom Discord Appender theo yêu cầu Bài 3 -->
+    <appender name="DISCORD" class="com.storex.logging.DiscordAppender">
+        <webhookUrl>${DISCORD_WEBHOOK}</webhookUrl>
+        <applicationName>${APP_NAME}</applicationName>
+    </appender>
+
+    <!-- 3. AsyncAppender bọc Discord Appender để tránh blocking Thread xử lý HTTP request -->
+    <appender name="ASYNC_DISCORD" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="DISCORD"/>
+        <queueSize>512</queueSize>
+        <!-- Không bỏ qua log ERROR khi hàng đợi đầy (discardingThreshold = 0) -->
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_DISCORD"/>
+    </root>
+
+</configuration>

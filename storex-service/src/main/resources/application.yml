@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: storex-service
+
+# Cấu hình Spring Boot Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        # Expose các endpoint: health, info, loggers
+        include: health, info, loggers
+      base-path: /actuator
+  endpoint:
+    loggers:
+      enabled: true
+    health:
+      show-details: always
+
+# Cấu hình Logging mức mặc định
+logging:
+  level:
+    root: INFO
+    com.storex: INFO
+    com.storex.payment: INFO # Ban đầu là INFO để kiểm thử test-debug không hiện log
+
+# Cấu hình Webhook URL cho Discord Appender
+discord:
+  webhook:
+    url: ${DISCORD_WEBHOOK_URL:https://discord.com/api/webhooks/dummy-url}
